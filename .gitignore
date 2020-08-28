@@ -1,0 +1,9 @@
+# Ignore the db
+*.sqlite
+*sqlite3
+# Ignore environment variables
+.env
+# Ignore all notes file
+CardCounterBot.txt
+# Ignore pyc files
+*.pyc
