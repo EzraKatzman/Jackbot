@@ -55,15 +55,6 @@ client.remove_command('help')
 @client.command()
 async def help(ctx):
     owner = os.getenv('MY_USER_ID')
-    db = sqlite3.connect('main.sqlite')
-    cursor = db.cursor()
-    cursor.execute(f'SELECT roulette FROM main WHERE user_id = {ctx.author.id}')
-    result = cursor.fetchone() 
-    if result[0] == 1:
-        print(f'{ctx.author} made it to hint 2')
-        await ctx.author.send("Well done! You've made it to the second hint! \nHint #2: You would think that there'd be some sort of security with all the gambling and robberies going on. I wonder if the cops are around somewhere?")
-    cursor.close()
-    db.close()
     embed = discord.Embed(color=0x00ffff, title="Jackbot Help")
     cog_description = "**<:chip:657253017262751767> Income** - Commands related to earning chips and starting out"
     cog_description += "\n**ℹ️ Stats** - All commands about info about users"
@@ -106,8 +97,6 @@ async def on_raw_reaction_add(help_msg):
         elif help_msg.emoji.name == "🃏":
             cog = "Card"
             edit = True
-        elif help_msg.emoji.name == "🏦":
-           edit = True
         if edit == True and cog is not None:
             new_embed = discord.Embed(color=0x00ffff, title="Jackbot Help")
             scog_info = ""
@@ -115,17 +104,6 @@ async def on_raw_reaction_add(help_msg):
                 if not c.hidden:
                     scog_info += f"**{c.name}** - {c.help}\n" 
             new_embed.add_field(name=f"{cog} Help", value=f"{scog_info}")
-            to_edit = await client.get_channel(help_msg.channel_id).fetch_message(help_msg.message_id)
-            try:
-                await to_edit.edit(embed=new_embed)
-                await to_edit.clear_reactions()
-            except Exception as e:
-                print(e)
-        elif edit == True:
-            new_embed = discord.Embed(color=0x000000)
-            new_embed.set_author(name="💰 Bank Robbery Terminal")
-            new_embed.add_field(name="Heist info", value="**heist** - steals from the bank of a random user *chance of getting caught and losing all balance in wallet or bank*", inline=False)
-            new_embed.add_field(name="👤 Thief", value="**buy master thief** - Skill [2 tokens]: increases your chances of a successful bank heist", inline=False)
             to_edit = await client.get_channel(help_msg.channel_id).fetch_message(help_msg.message_id)
             try:
                 await to_edit.edit(embed=new_embed)

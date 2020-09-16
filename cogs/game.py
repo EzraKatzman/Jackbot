@@ -31,9 +31,6 @@ class Game(commands.Cog, name="Game"):
                 if result[3] == 1:
                     embed.add_field(name="Blocked!", value="You cannot play games while in the roulette pool", inline=False)
                 else:
-                    if arg == 12:
-                        print(f'{ctx.author} made it to hint 3')
-                        await ctx.author.send("🚔 This police car seems to be empty. Seems the security here is no good. Maybe you could hire your own bodyguard?")
                     if arg < 10 or arg > result[1]:
                         embed.add_field(name="Error", value="Your bid must be above 10 chips. Are you sure you have enough?", inline=False)
                         embed.set_footer(text="You can check your balance using the *profile* command")
@@ -322,7 +319,6 @@ class Game(commands.Cog, name="Game"):
                 if col_one[1] == col_two[1] == col_three[1]:
                     if col_one[1] == "📜":
                         pot = int(arg * 2)
-                        await ctx.author.send("This scroll has a lyric written on it! `I count from 11 to 13 because...`\n The rest is blurred out")
                     elif col_one[1] == "🍉":
                         pot = int(arg * 1.2)
                     elif col_one[1] == "🍒":
@@ -414,75 +410,6 @@ class Game(commands.Cog, name="Game"):
             embed.add_field(name="Error", value="You must register before you can do this! But shoutout to you for finding it")
         await ctx.channel.purge(limit=1)
         await ctx.author.send(content=None, embed=embed)
-        db.commit()
-        cursor.close()
-        db.close()
-
-    @commands.command()
-    async def fountain(self, ctx):
-        """Toss a token into the fountain! What could go wrong?"""
-        db = sqlite3.connect('main.sqlite')
-        cursor = db.cursor()
-        cursor.execute(f'SELECT user_id, token, jacks, level, bank, salary_cooldown FROM main WHERE user_id = {ctx.author.id}')
-        result = cursor.fetchone()
-        embed = discord.Embed(color=0x0000ff)
-        embed.set_author(name="⛲ The fountain!")
-        if result[0] is None:
-            embed.add_field(name="Who are you?", value="You don't have clearance to be here, maybe register first?", inline=False)
-        elif result[1] == 0 or result[1] is None:
-            embed.add_field(name="Nothing happened", value="You don't have anything to toss into the fountain", inline=False)
-        else:
-            wish = random.randint(0, 3)
-            good_v_bad = random.randint(0, 1)
-            if wish == 0:
-                sql = ("UPDATE main SET (jacks, token) = (?,?) WHERE user_id = ?")
-                if good_v_bad == 0:
-                    jacks = int(result[2] + 2000)
-                    embed.add_field(name="You tossed a token into the fountain...", value="As you left the fountain you found <:chip:657253017262751767> **2000** chips on the floor!", inline=False)
-                else:
-                    if result[2] >= 2000:
-                        jacks = int(result[2] - 2000)
-                    else:
-                        jacks = 0
-                    embed.add_field(name="You tossed a token into the fountain...", value="As you left the fountain you realized that **2000** chips disappeared from your wallet!", inline=False)
-                val = (jacks, int(result[1] - 1), ctx.author.id)
-            elif wish == 1:
-                sql = ("UPDATE main SET (level, token) = (?,?) WHERE user_id = ?")
-                good_v_bad = random.randint(0,2)
-                if good_v_bad == 0:
-                    level = result[3] + 2
-                    embed.add_field(name="You tossed a token into the fountain...", value=f"You suddenly feel stronger, like you gained **2** levels", inline=False)
-                else:
-                    if int(result[3]) > 2:
-                        level = int(result[3] - 2)
-                    else:
-                        level = int(result[3] - 1)
-                    embed.add_field(name="You tossed a token into the fountain...", value=f"You suddenly feel weaker, like you lost a level or two", inline=False)
-                val = (level, int(result[1] - 1), ctx.author.id)
-            elif wish == 2:
-                sql = ("UPDATE main SET (bank, token) = (?,?) WHERE user_id = ?")
-                if good_v_bad == 0:
-                    balance = int(result[4] + 4000)
-                    embed.add_field(name="You tossed a token into the fountain...", value=f'You got a call from the bank! Apparently, a mysterious benefactor deposited <:chip:657253017262751767> **4000** into your account!', inline=False)
-                else:
-                    balance = 0
-                    embed.add_field(name="You tossed a token into the fountain...", value=f'You got a call from the police! The bank was robbed and you lost your money!', inline=False)
-                val = (balance, int(result[1] - 1), ctx.author.id)
-            elif wish == 3:
-                sql = ("UPDATE main SET (salary_cooldown, token) = (?,?) WHERE user_id = ?")
-                if good_v_bad == 0:
-                    wait_time = 0
-                    embed.add_field(name="You tossed a token into the fountain...", value="You made it back to the office without getting caught! Your boss was so impressed with your dedication to the job that they gave you an advance on your salary!", inline=False)
-                    embed.set_footer(text="Your salary is available again")
-                else:
-                    wait_time = result[5] + 10800.00
-                    embed.add_field(name="You tossed a token into the fountain...", value="Your boss caught you slacking off when you should have been working and docked your pay for the week!", inline=False)
-                    embed.set_footer(text="You must wait an additional 3 hours for your salary")
-                val = (wait_time, int(result[1] - 1), ctx.author.id)
-            embed.add_field(name='\u200b', value=f"You have {result[1] - 1} tokens remaining", inline=False)
-        embed.timestamp = datetime.datetime.utcnow()
-        await ctx.send(content=None, embed=embed)
-        cursor.execute(sql, val)
         db.commit()
         cursor.close()
         db.close()
