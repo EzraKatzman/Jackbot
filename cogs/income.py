@@ -174,10 +174,7 @@ class Income(commands.Cog, name="Income"):
                 embed.add_field(name="Error:", value="You can't withdraw negative funds or none at all")  
             elif result[2] >= amount:
                 wallet = int((result[1]) + amount)
-                if int(result[4]) < 30:
-                    balance = int(result[2] - math.floor(amount * 1.05))
-                else:
-                    balance = int(result[2] - amount)
+                balance = int(result[2] - amount)
                 if balance < 0:
                     amount = math.ceil(amount * 0.95)
                     wallet = int((result[1]) + amount)
