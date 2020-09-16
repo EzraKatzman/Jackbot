@@ -161,7 +161,7 @@ class Income(commands.Cog, name="Income"):
         """["amount"] Withdraw chips from the bank *5% fee per withdrawl*"""
         db = sqlite3.connect('main.sqlite')
         cursor = db.cursor()
-        cursor.execute(f'SELECT user_id, jacks, bank, roulette, level FROM main WHERE user_id = {ctx.author.id}')
+        cursor.execute(f'SELECT user_id, jacks, bank, roulette FROM main WHERE user_id = {ctx.author.id}')
         result = cursor.fetchone()
         embed = discord.Embed(color=0xf8f8ff)
         embed.set_author(name=f"🏛️ {ctx.author}'s Bank account")
