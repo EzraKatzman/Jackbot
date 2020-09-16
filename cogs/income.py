@@ -175,10 +175,6 @@ class Income(commands.Cog, name="Income"):
             elif result[2] >= amount:
                 wallet = int((result[1]) + amount)
                 balance = int(result[2] - amount)
-                if balance < 0:
-                    amount = math.ceil(amount * 0.95)
-                    wallet = int((result[1]) + amount)
-                    balance = int(result[2] - amount)
                 sql = ("UPDATE main SET (jacks, bank) = (?,?) WHERE user_id = ?")
                 val = (wallet, balance, ctx.author.id)
                 if wallet == 1:
