@@ -23,12 +23,12 @@ class Game(commands.Cog, name="Game"):
         if isinstance(arg, int) == True: 
             db = sqlite3.connect('main.sqlite')
             cursor = db.cursor()
-            cursor.execute(f'SELECT user_id, jacks, schance, roulette FROM main WHERE user_id = {ctx.author.id}')
+            cursor.execute(f'SELECT user_id, jacks, roulette FROM main WHERE user_id = {ctx.author.id}')
             result = cursor.fetchone()
             embed = discord.Embed(color=0xff0000)
             embed.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
             if result is not None:
-                if result[3] == 1:
+                if result[2] == 1:
                     embed.add_field(name="Blocked!", value="You cannot play games while in the roulette pool", inline=False)
                 else:
                     if arg < 10 or arg > result[1]:
@@ -38,13 +38,6 @@ class Game(commands.Cog, name="Game"):
                         if arg > 1500:
                             arg = 1500
                             embed.add_field(name="Notice", value="The maximum bid for dice is 1500, and your bid has been adjusted accordingly", inline=False)
-                        if result[2] is not None:
-                            second_chance = random.randint(0,2)
-                            if second_chance == 1:
-                                if die_one + die_two < 8:
-                                    die_one = random.randint(1, 6)
-                                    die_two = random.randint(1, 6)
-                                    embed.add_field(name="Second chance!", value="You got an extra roll of the dice!", inline=False)
                         embed.add_field(name="Dice:", value=f"**🎲 {die_one}** \u200b \u200b **🎲 {die_two}**")
                         if die_one + die_two > 7:
                             bid = arg
@@ -77,66 +70,16 @@ class Game(commands.Cog, name="Game"):
         else:
             db = sqlite3.connect('main.sqlite')
             cursor = db.cursor()
-            cursor.execute(f'SELECT user_id, jacks, salary_cooldown, immune, roulette, schance, date FROM main WHERE user_id IN {ctx.author.id, user.id}')
+            cursor.execute(f'SELECT user_id, jacks, salary_cooldown, roulette FROM main WHERE user_id IN {ctx.author.id, user.id}')
             result = cursor.fetchmany(2)
             # Fixes error in which the order of the fetch wouldn't accurately portray the command explanation
             if not int(result[0][0]) == int(ctx.author.id):
                 result.reverse()
             if result[0] is None:
                 await ctx.send("You must register first!")
-            elif result[0][4] == 1:
+            elif result[0][3] == 1:
                 await ctx.send("You cannot rob users while in the roulette pool")
-            elif result[1][3] is not None:
-                if result[0][6] is not None:
-                    if result[0][1] == 0:
-                        await ctx.send("You probably shouldn't risk this command")
-                    elif result[1][1] == 0:
-                        await ctx.send("That user has no money right now")
-                    elif result[1][4] == 1:
-                        await ctx.send(f"You cannot rob {user} while they are in the roulette pool")
-                    else:
-                        if int(result[0][1]) < int(result[1][1]):
-                            maximum = math.ceil(result[0][1])
-                        else:
-                            maximum = math.ceil(result[1][1])
-                        target = random.randint(1, maximum)
-                        success_rate = random.randint(0, 9)
-                        embed=discord.Embed(color=0x0236f2)
-                        embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
-                        if result[0][5] is not None:
-                            if success_rate % 3 != 0:
-                                success_rate = random.randint(0, 9)
-                                embed.add_field(name="Second chance!", value=f"You got a second chance to rob {user}", inline=False)
-                        if success_rate % 3 == 0:
-                            jacks = int(target + result[0][1])
-                            time = result[0][2] + 3600.0
-                            fine = int(result[1][1] - target)
-                            sql = ("UPDATE main SET (jacks, salary_cooldown) = (?,?) WHERE user_id = ?")
-                            val = (jacks, time, ctx.author.id)
-                            other_sql = ("UPDATE main SET jacks = ? WHERE user_id = ?")
-                            other_val = (fine, user.id)
-                            embed.add_field(name="Success!", value=f"You successfully stole <:chip:657253017262751767> **{target}** chips from {user.mention}", inline=False)
-                            embed.add_field(name="Salary Update:", value="You must wait an extra hour to claim your salary", inline=False)
-                        elif success_rate % 5 == 0:
-                            embed.add_field(name="Escape!", value=f"You were seen trying to rob {user.mention} but ran away before you got caught", inline=False)
-                        else:
-                            jacks = int(result[0][1] - target)
-                            fine = int(result[1][1] + target)
-                            time = result[0][2] - 3600.0
-                            sql = ("UPDATE main SET (jacks, salary_cooldown) = (?,?) WHERE user_id = ?")
-                            val = (jacks, time, ctx.author.id)
-                            other_sql = ("UPDATE main SET jacks = ? WHERE user_id = ?")
-                            other_val = (fine, user.id)
-                            embed.add_field(name="Caught stealing!", value=f"You got caught and gave <:chip:657253017262751767> **{target}** chips to {user.mention} as an apology", inline=False)
-                            embed.add_field(name="Salary Update:", value="You can wait 1 less hour to claim your salary", inline=False)
-                        embed.set_footer(text=f"You now have {jacks} chips in your wallet")
-                        embed.timestamp = datetime.datetime.utcnow()
-                        await ctx.send(content=None, embed=embed)
-                else:
-                    embed = discord.Embed(color=0x0236f2)
-                    embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
-                    embed.add_field(name="Nice try!", value=f"{user.mention} is immune from being robbed!", inline=False)
-                    await ctx.send(content=None, embed=embed)
+            
             elif len(result) == 1:
                 await ctx.send("The person you are trying to rob is not a registered user!")
             else:
@@ -153,10 +96,6 @@ class Game(commands.Cog, name="Game"):
                     success_rate = random.randint(0, 9)
                     embed=discord.Embed(color=0x0236f2)
                     embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
-                    if result[0][5] is not None:
-                        if success_rate % 3 != 0:
-                            success_rate = random.randint(0, 9)
-                            embed.add_field(name="Second chance!", value=f"You got a second chance to rob {user}", inline=False)
                     if success_rate % 3 == 0:
                         jacks = int(target + result[0][1])
                         time = result[0][2] + 3600.0
@@ -307,14 +246,6 @@ class Game(commands.Cog, name="Game"):
                 if arg > 1500:
                         arg = 1500
                         embed.add_field(name="Notice", value="The maximum bid for slots is 1500, and your bid has been adjusted accordingly", inline=False)
-                if result[2] is not None:
-                    if col_one[1] != col_two[1] and col_one[1] != col_three[1] and col_two[1] != col_three[1]:
-                        second_chance = random.randint(0,2)
-                        if second_chance == 1:
-                            random.shuffle(col_one)
-                            random.shuffle(col_two)
-                            random.shuffle(col_three)
-                            embed.add_field(name="Second Chance!", value="You got a second chance roll of the slots for free", inline=False)
                 embed.add_field(name="🎰 Slots:", value=f"**{col_one[0]}|{col_two[0]}|{col_three[0]}\n{col_one[1]}|{col_two[1]}|{col_three[1]} ⬅️\n{col_one[2]}|{col_two[2]}|{col_three[2]}**", inline=False)
                 if col_one[1] == col_two[1] == col_three[1]:
                     if col_one[1] == "📜":
@@ -354,15 +285,13 @@ class Game(commands.Cog, name="Game"):
     async def heist(self, ctx):
         db = sqlite3.connect('main.sqlite')
         cursor = db.cursor()
-        cursor.execute(f'SELECT user_id, jacks, schance, thief FROM main WHERE user_id = {ctx.author.id}')
+        cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {ctx.author.id}')
         result = cursor.fetchone()
         embed = discord.Embed(color=0xffffff)
         embed.set_author(name="🏛️Bank Heist")
         if result is not None:
             if int(result[1]) > 0:
                 success_rate = random.randint(0, 9)
-                if result[3] is not None:
-                    success_rate = random.randint(0, 3)
                 if success_rate % 3 == 0:
                     # WORK ON THIS PART
                     cursor.execute(f'SELECT user_id, jacks, bank FROM main WHERE bank > 0')
