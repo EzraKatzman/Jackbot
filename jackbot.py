@@ -3,6 +3,7 @@ from discord.ext import commands
 import os, json, sys
 from dotenv import load_dotenv
 import sqlite3, traceback
+import deck
 
 client = commands.Bot(command_prefix = '<')
 load_dotenv()
@@ -18,7 +19,7 @@ async def on_ready():
         salary_cooldown REAL 
         )
     ''')
-    await client.change_presence(status=discord.Status.online, activity=discord.Game('tag me for help!'))
+    await client.change_presence(status=discord.Status.online, activity=discord.Game('with house money'))
     print("Let's roll")
 
 initial_extensions = ['cogs.income', 'cogs.game', "cogs.shop", "cogs.panel", 'cogs.stats', "cogs.card"]

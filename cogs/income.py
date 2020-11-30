@@ -158,7 +158,7 @@ class Income(commands.Cog, name="Income"):
 
     @commands.command(aliases=["with", "w"])
     async def withdraw(self, ctx, amount: int = None):
-        """["amount"] Withdraw chips from the bank *5% fee per withdrawl*"""
+        """["amount"] Withdraw chips from the bank"""
         db = sqlite3.connect('main.sqlite')
         cursor = db.cursor()
         cursor.execute(f'SELECT user_id, jacks, bank, roulette FROM main WHERE user_id = {ctx.author.id}')

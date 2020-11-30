@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
-import pydealer, random, sqlite3, math, datetime, re
+import pydealer, random, sqlite3, math, datetime, re, itertools
 from pydealer.const import POKER_RANKS
+import deck
 
 class Card(commands.Cog, name="Card"):
 
@@ -17,12 +18,77 @@ class Card(commands.Cog, name="Card"):
 
     # Command
     @commands.command(aliases=["bet"])
-    async def blackjack(self, ctx):    
-        """Play blackjack against the bot"""
+    async def blackjack(self, ctx, arg: int):    
+        """Play blackjack against the bot""" 
+        db = sqlite3.connect('main.sqlite')
+        cursor = db.cursor()
+        cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {ctx.author.id}')
+        result = cursor.fetchone()
         embed = discord.Embed(color=0x228b22, title="Blackjack")
-        embed.add_field(name="Sorry!", value="Blackjack is coming soon! Stay tuned", inline=False)
-        await ctx.send(content=None, embed=embed)
-    
+        if result is not None:
+            if arg > result[1]:
+                embed.add_field(name="Error", value=f"You can't bid more chips than you have!", inline=False)
+                embed.set_footer(text="You can check your balance using the *profile* command")
+            else:
+                player, house = [],[]
+                deck.deal(player,2)
+                deck.deal(house, 2)
+                embed.add_field(name="Your Hand:", value=f"```{deck.display_hand(player)}``` \n Value: {deck.hand_value(player)}")
+                embed.add_field(name="Dealer's Hand:", value=f"```['{deck.display_hand(house)[1]}', '?'] ``` \n Value: ?")
+                embed.set_footer(text="Type `hit` or `stay` to take your turn!")
+                await ctx.send(content=None, embed=embed)
+                if deck.hand_value(house) != 21 and deck.hand_value(player) != 21:
+                    msg = await self.client.wait_for('message', check=lambda message: message.author == ctx.author)
+                    while msg.content.startswith("hit") or msg.content.startswith("Hit"):
+                        embed.remove_field(0)
+                        deck.deal(player)
+                        embed.insert_field_at(0, name="Your Hand:", value=f"```{deck.display_hand(player)}``` \n Value: {deck.hand_value(player)}")
+                        await ctx.send(content=None, embed=embed)
+                        if deck.hand_value(player) > 21:
+                            break
+                        msg = await self.client.wait_for('message', check=lambda message: message.author == ctx.author)
+                embed.remove_field(1)
+                embed.set_footer(text="")
+                deck.house_turn(house)
+                embed.add_field(name="Dealer's Hand:", value=f"```{deck.display_hand(house)}``` \n Value: {deck.hand_value(house)}")
+                if deck.hand_value(player) == 21:
+                    outcome = "Blackjack!"
+                    bal = "won"
+                    chips = int(result[1] + arg*1.5)
+                elif deck.hand_value(player) > 21:
+                    outcome = "Player bust, you lose"
+                    bal = "lost"
+                    chips = int(result[1] - arg)
+                elif deck.hand_value(house) > 21:
+                    outcome = "Dealer bust, you win!"
+                    bal = "won"
+                    chips = int(result[1] + arg)
+                elif deck.hand_value(player) > deck.hand_value(house):
+                    outcome = "Win!"
+                    bal = "won"
+                    chips = int(result[1] + arg)
+                elif deck.hand_value(player) == deck.hand_value(house):
+                    outcome = "Push, chips back"
+                    bal = "gotten back your"
+                    chips = int(result[1])
+                else:
+                    outcome = "Loss"
+                    bal = "lost"
+                    chips = int(result[1] - arg)
+                sql = ("UPDATE main SET jacks = ? WHERE user_id = ?")
+                val = (chips, ctx.author.id)
+                cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
+                if chips == int(result[1]):
+                    chips += arg
+                embed.add_field(name=outcome, value=f"You have {bal} <:chip:657253017262751767> **{abs(int(result[1] - chips))}** chips", inline=False)
+            await ctx.send(content=None, embed=embed)
+        else:
+            await ctx.send("You must register before you can play blackjack!")
+                
+
     @commands.command()
     async def poker(self, ctx, arg:str = None):
         """["join/leave/deal"] Play poker against other users"""
