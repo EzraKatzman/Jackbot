@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import pydealer, random, sqlite3, math, datetime, re, itertools
+import pydealer, random, sqlite3, math, datetime, re, itertools, os, asyncio
 from pydealer.const import POKER_RANKS
 import deck
 
@@ -10,6 +10,9 @@ class Card(commands.Cog, name="Card"):
 
     def __init__(self, client):
         self.client = client
+
+    
+    bets = {}
 
     # Event
     @commands.Cog.listener()
@@ -88,6 +91,32 @@ class Card(commands.Cog, name="Card"):
         else:
             await ctx.send("You must register before you can play blackjack!")
                 
+    @commands.command(aliases=["horse", "race"])
+    async def horse_race(self, ctx, arg:str = None):
+        """Bet on which card suit wins the race!"""
+        # betting boilerplate checks to be inserted later
+        embed = discord.Embed(color=0xf0eec0, title="Horse Race")
+        embed.add_field(name="Betting Phase", value="React with the suit to bet on it. The bet amount is set by the user who started the game. You may only bet on one suit.", inline=False)
+        
+        betting_phase = await ctx.send(content=None, embed=embed)
+        for reaction in ['♦️', '♥️', '♠️', '♣️']:
+            await betting_phase.add_reaction(emoji=reaction)
+        # Waits 30 seconds before locking in the bets
+        await asyncio.sleep(30)
+        await betting_phase.clear_reactions()
+
+    
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, message, bets=bets):
+        is_bot = str(message.user_id) == os.getenv('BOT_ID')
+        valid_reaction = message.emoji.name in ['♦️', '♥️', '♠️', '♣️']
+        if valid_reaction and not is_bot:
+            if message.user_id in bets:
+                betting_phase = await self.client.get_channel(message.channel_id).fetch_message(message.message_id)
+                await betting_phase.remove_reaction(bets[message.user_id] , self.client.get_user(message.user_id))
+            bets.update({message.user_id : message.emoji.name})
+
+
 
     @commands.command()
     async def poker(self, ctx, arg:str = None):
