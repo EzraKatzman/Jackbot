@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import pydealer, random, sqlite3, math, datetime, re, itertools, os, asyncio
 from pydealer.const import POKER_RANKS
-import deck
+import deck, verification
 
 class Card(commands.Cog, name="Card"):
 
@@ -92,26 +92,30 @@ class Card(commands.Cog, name="Card"):
             await ctx.send("You must register before you can play blackjack!")
                 
     @commands.command(aliases=["horse", "race"])
-    async def horse_race(self, ctx, arg:str = None):
-        """Bet on which card suit wins the race!"""
+    async def horse_race(self, ctx, arg:int, bets=bets):
+        """["bid"] Bet on which card suit wins the race!"""
         # betting boilerplate checks to be inserted later
-        embed = discord.Embed(color=0xf0eec0, title="Horse Race")
-        embed.add_field(name="Betting Phase", value="React with the suit to bet on it. The bet amount is set by the user who started the game. You may only bet on one suit.", inline=False)
-        
-        betting_phase = await ctx.send(content=None, embed=embed)
-        for reaction in ['♦️', '♥️', '♠️', '♣️']:
-            await betting_phase.add_reaction(emoji=reaction)
-        # Waits 30 seconds before locking in the bets
-        await asyncio.sleep(30)
-        await betting_phase.clear_reactions()
-
+        if verification.has_funds(ctx.author.id, arg) and verification.is_user(ctx.author.id):
+            embed = discord.Embed(color=0xf0eec0, title="Horse Race 🏇")
+            embed.add_field(name="Betting Phase", value="React with a suit to bet on it. The bet amount is set by the user who started the game. You may only bet on one suit. \n Betting closes in **30** seconds!", inline=False)
+            betting_phase = await ctx.send(content=None, embed=embed)
+            for reaction in ['♦️', '♥️', '♠️', '♣️']:
+                await betting_phase.add_reaction(emoji=reaction)
+            # Waits 30 seconds before locking in the bets
+            await asyncio.sleep(30)
+            await betting_phase.clear_reactions()
+            embed.remove_field(0)
+            print(bets)
+            bets = {}
+        else:
+            await ctx.send("There was an error")
     
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, message, bets=bets):
         is_bot = str(message.user_id) == os.getenv('BOT_ID')
         valid_reaction = message.emoji.name in ['♦️', '♥️', '♠️', '♣️']
         if valid_reaction and not is_bot:
-            if message.user_id in bets:
+            if message.user_id in bets and bets[message.user_id] != message.emoji.name:
                 betting_phase = await self.client.get_channel(message.channel_id).fetch_message(message.message_id)
                 await betting_phase.remove_reaction(bets[message.user_id] , self.client.get_user(message.user_id))
             bets.update({message.user_id : message.emoji.name})

@@ -3,7 +3,7 @@ from discord.ext import commands
 import os, json, sys
 from dotenv import load_dotenv
 import sqlite3, traceback
-import deck
+import deck, verification
 
 client = commands.Bot(command_prefix = '<')
 load_dotenv()
