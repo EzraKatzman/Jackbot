@@ -241,7 +241,7 @@ class Game(commands.Cog, name="Game"):
             elif chips < 10:
                 embed.add_field(name="Error", value="You don't have enough chips to play the slots", inline=False)
             elif arg > chips or arg < 10:
-                embed.add_field(name="Error", value="Your bid must be between above 10 chips. Are you sure you have enough?", inline=False)
+                embed.add_field(name="Error", value="Your bid must be above 10 chips. Are you sure you have enough?", inline=False)
             else:
                 if arg > 1500:
                         arg = 1500

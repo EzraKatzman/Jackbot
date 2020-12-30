@@ -112,7 +112,7 @@ class Card(commands.Cog, name="Card"):
             # If the user who reacted does not have the funds or is not registered
             for bet in bets:
                 if not verification.is_user(bet) or not verification.has_funds(bet, arg):
-                    del bets[bet]
+                    bets.pop(bet)
             pot = arg * len(bets)
             while standings[max(standings.items(), key=operator.itemgetter(1))[0]] < 12:
                 embed.clear_fields()
@@ -123,22 +123,22 @@ class Card(commands.Cog, name="Card"):
                 embed.add_field(name="\u200b", value=f"{racetrack[:standings['♠️']]+ '<:As:656572090610090004>' +racetrack[standings['♠️']:]}", inline=False)
                 embed.add_field(name="\u200b", value=f"{racetrack[:standings['♣️']]+ '<:Ac:656572024185159694>' +racetrack[standings['♣️']:]}", inline=False)
                 await status.edit(embed=embed)
-            winners = dict(filter(lambda elem: elem[1] == standings[max(standings.items(), key=operator.itemgetter(1))[0]], bets.items()))
-            losers = dict(filter(lambda elem: elem[1] != standings[max(standings.items(), key=operator.itemgetter(1))[0]], bets.items()))
+            winners = dict(filter(lambda elem: elem[1] == max(standings.items(), key=operator.itemgetter(1))[0], bets.items()))
+            losers = dict(filter(lambda elem: elem[1] != max(standings.items(), key=operator.itemgetter(1))[0], bets.items()))
             embed.clear_fields
             embed.add_field(name="Winner!", value=f"{max(standings.items(), key=operator.itemgetter(1))[0]} won the race!", inline=False)
-            if len(winners) > 0:
-                embed.add_field(name="Payout", value=f"Winners have each won <:chip:657253017262751767> **{pot/len(winners)}** chips", inline=False)
-            else:
-                embed.add_field(name="Payout", value="Nobody won this time around...", inline=False)
-            await ctx.send(content=None, embed=embed)
             db = sqlite3.connect('main.sqlite')
             cursor = db.cursor()
             sql = ("UPDATE main SET jacks = ? WHERE user_id = ?")
-            for winner in winners:
-                cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {winner}')
-                result = cursor.fetchone()
-                val = (result[1] + (pot/len(winners)), winner)
+            if len(winners) != 0:
+                embed.add_field(name="Payout", value=f"Winners have each won <:chip:657253017262751767> **{int(pot/len(winners))}** chips", inline=False)
+                for winner in winners:
+                    cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {winner}')
+                    result = cursor.fetchone()
+                    val = (result[1] + (int(pot/len(winners))), winner)
+            else:
+                embed.add_field(name="Payout", value="Nobody won this time around...", inline=False)
+            await ctx.send(content=None, embed=embed)
             for loser in losers:
                 cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {loser}')
                 result = cursor.fetchone()
