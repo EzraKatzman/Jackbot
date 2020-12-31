@@ -21,7 +21,7 @@ def has_funds(user_id: int, bid: int) -> bool:
     result = cursor.fetchone()
     cursor.close()
     db.close()
-    if result[0] > bid:
+    if result[0] >= bid:
         return True
     else: 
         return False
