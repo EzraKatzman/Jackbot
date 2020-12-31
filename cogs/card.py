@@ -93,7 +93,7 @@ class Card(commands.Cog, name="Card"):
                 
     @commands.command(aliases=["horse", "race"])
     async def horse_race(self, ctx, arg:int, bets=bets):
-        """["bid"] Bet on which card suit wins the race!"""
+        """["bid"] Bet on which card suit wins the race! **Multiplayer Game**"""
         # betting boilerplate checks to be inserted later
         if verification.has_funds(ctx.author.id, arg) and verification.is_user(ctx.author.id):
             embed = discord.Embed(color=0xf0eec0, title="Horse Race 🏇")
@@ -135,7 +135,7 @@ class Card(commands.Cog, name="Card"):
                 for winner in winners:
                     cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {winner}')
                     result = cursor.fetchone()
-                    val = (result[1] + int(pot/len(winners)), winner)
+                    val = (result[1] - arg + int(pot/len(winners)), winner)
                     cursor.execute(sql, val)
                     embed.add_field(name="Payout", value=f"{self.client.get_user(winner).mention} has won <:chip:657253017262751767> **{int(pot/len(winners))}** chips", inline=False)
             else:
