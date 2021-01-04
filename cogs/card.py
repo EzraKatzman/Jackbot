@@ -96,6 +96,7 @@ class Card(commands.Cog, name="Card"):
         """["bid"] Bet on which card suit wins the race! **Multiplayer Game**"""
         # betting boilerplate checks to be inserted later
         if verification.is_user(ctx.author.id):
+            print(bets)
             if verification.has_funds(ctx.author.id, arg) and not bets:
                 embed = discord.Embed(color=0xf0eec0, title="Horse Race 🏇")
                 embed.add_field(name="Betting Phase", value="React with a suit to bet on it. The bet amount is set by the user who started the game. You may only bet on one suit.", inline=False)
@@ -151,7 +152,9 @@ class Card(commands.Cog, name="Card"):
                 db.commit()
                 cursor.close()
                 db.close()
-                bets = {}
+                bets.clear()
+                print(bets)
+                print("Done")
             else:
                 await ctx.send("An error occurred, either you do not have enough chips for this race or a race is already in progress.")
         else:
