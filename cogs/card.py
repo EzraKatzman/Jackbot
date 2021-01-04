@@ -95,64 +95,67 @@ class Card(commands.Cog, name="Card"):
     async def horse_race(self, ctx, arg:int, bets=bets):
         """["bid"] Bet on which card suit wins the race! **Multiplayer Game**"""
         # betting boilerplate checks to be inserted later
-        if verification.has_funds(ctx.author.id, arg) and verification.is_user(ctx.author.id):
-            embed = discord.Embed(color=0xf0eec0, title="Horse Race 🏇")
-            embed.add_field(name="Betting Phase", value="React with a suit to bet on it. The bet amount is set by the user who started the game. You may only bet on one suit.", inline=False)
-            embed.add_field(name="Betting closes in 30 seconds!", value=f"Bets are <:chip:657253017262751767> **{arg}** chips per person", inline=False)
-            betting_phase = await ctx.send(content=None, embed=embed)
-            racers = ['♦️', '♥️', '♠️', '♣️']
-            for reaction in racers:
-                await betting_phase.add_reaction(emoji=reaction)
-            # Waits 30 seconds before locking in the bets
-            await asyncio.sleep(30)
-            await betting_phase.clear_reactions()
-            standings = {'♦️':0, '♥️':0, '♠️':0, '♣️':0}
-            embed.add_field(name="Betting has been closed.", value="The race is starting now!", inline=False)
-            status = await ctx.send(content=None, embed=embed)
-            # If the user who reacted does not have the funds or is not registered
-            for bet in bets:
-                if not verification.is_user(bet) or not verification.has_funds(bet, arg):
-                    del bets[bet]
-                    await ctx.send(f"{self.client.get_user(bet)} does not have enough chips to bet on this race")
-            pot = arg * len(bets)
-            while standings[max(standings.items(), key=operator.itemgetter(1))[0]] < 12:
-                embed.clear_fields()
-                standings[random.choice(racers)] += 1
-                racetrack = "🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🏁"
-                embed.add_field(name="\u200b", value=f"{racetrack[:standings['♦️']]+ '<:Ad:656572046658109461>' +racetrack[standings['♦️']:]}", inline=False)
-                embed.add_field(name="\u200b", value=f"{racetrack[:standings['♥️']]+ '<:Ah:656572070737608734>' +racetrack[standings['♥️']:]}", inline=False)
-                embed.add_field(name="\u200b", value=f"{racetrack[:standings['♠️']]+ '<:As:656572090610090004>' +racetrack[standings['♠️']:]}", inline=False)
-                embed.add_field(name="\u200b", value=f"{racetrack[:standings['♣️']]+ '<:Ac:656572024185159694>' +racetrack[standings['♣️']:]}", inline=False)
-                await status.edit(embed=embed)
-            winners = dict(filter(lambda elem: elem[1] == max(standings.items(), key=operator.itemgetter(1))[0], bets.items()))
-            losers = dict(filter(lambda elem: elem[1] != max(standings.items(), key=operator.itemgetter(1))[0], bets.items()))
-            embed.clear_fields
-            embed.add_field(name="Winner!", value=f"{max(standings.items(), key=operator.itemgetter(1))[0]} won the race!", inline=False)
-            db = sqlite3.connect('main.sqlite')
-            cursor = db.cursor()
-            sql = ("UPDATE main SET jacks = ? WHERE user_id = ?")
-            if len(winners) != 0:
-                for winner in winners:
-                    cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {winner}')
-                    result = cursor.fetchone()
-                    val = (result[1] - arg + int(pot/len(winners)), winner)
-                    cursor.execute(sql, val)
-                    embed.add_field(name="Payout", value=f"{self.client.get_user(winner).mention} has won <:chip:657253017262751767> **{int(pot/len(winners))}** chips", inline=False)
+        if verification.is_user(ctx.author.id):
+            if verification.has_funds(ctx.author.id, arg) and not bets:
+                embed = discord.Embed(color=0xf0eec0, title="Horse Race 🏇")
+                embed.add_field(name="Betting Phase", value="React with a suit to bet on it. The bet amount is set by the user who started the game. You may only bet on one suit.", inline=False)
+                embed.add_field(name="Betting closes in 30 seconds!", value=f"Bets are <:chip:657253017262751767> **{arg}** chips per person", inline=False)
+                betting_phase = await ctx.send(content=None, embed=embed)
+                racers = ['♦️', '♥️', '♠️', '♣️']
+                for reaction in racers:
+                    await betting_phase.add_reaction(emoji=reaction)
+                # Waits 30 seconds before locking in the bets
+                await asyncio.sleep(30)
+                await betting_phase.clear_reactions()
+                standings = {'♦️':0, '♥️':0, '♠️':0, '♣️':0}
+                embed.add_field(name="Betting has been closed.", value="The race is starting now!", inline=False)
+                status = await ctx.send(content=None, embed=embed)
+                # If the user who reacted does not have the funds or is not registered
+                for bet in bets:
+                    if not verification.is_user(bet) or not verification.has_funds(bet, arg):
+                        del bets[bet]
+                        await ctx.send(f"{self.client.get_user(bet)} does not have enough chips to bet on this race")
+                pot = arg * len(bets)
+                while standings[max(standings.items(), key=operator.itemgetter(1))[0]] < 12:
+                    embed.clear_fields()
+                    standings[random.choice(racers)] += 1
+                    racetrack = "🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🏁"
+                    embed.add_field(name="\u200b", value=f"{racetrack[:standings['♦️']]+ '<:Ad:656572046658109461>' +racetrack[standings['♦️']:]}", inline=False)
+                    embed.add_field(name="\u200b", value=f"{racetrack[:standings['♥️']]+ '<:Ah:656572070737608734>' +racetrack[standings['♥️']:]}", inline=False)
+                    embed.add_field(name="\u200b", value=f"{racetrack[:standings['♠️']]+ '<:As:656572090610090004>' +racetrack[standings['♠️']:]}", inline=False)
+                    embed.add_field(name="\u200b", value=f"{racetrack[:standings['♣️']]+ '<:Ac:656572024185159694>' +racetrack[standings['♣️']:]}", inline=False)
+                    await status.edit(embed=embed)
+                winners = dict(filter(lambda elem: elem[1] == max(standings.items(), key=operator.itemgetter(1))[0], bets.items()))
+                losers = dict(filter(lambda elem: elem[1] != max(standings.items(), key=operator.itemgetter(1))[0], bets.items()))
+                embed.clear_fields
+                embed.add_field(name="Winner!", value=f"{max(standings.items(), key=operator.itemgetter(1))[0]} won the race!", inline=False)
+                db = sqlite3.connect('main.sqlite')
+                cursor = db.cursor()
+                sql = ("UPDATE main SET jacks = ? WHERE user_id = ?")
+                if len(winners) != 0:
+                    for winner in winners:
+                        cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {winner}')
+                        result = cursor.fetchone()
+                        val = (result[1] - arg + int(pot/len(winners)), winner)
+                        cursor.execute(sql, val)
+                        embed.add_field(name="Payout", value=f"{self.client.get_user(winner).mention} has won <:chip:657253017262751767> **{int(pot/len(winners))}** chips", inline=False)
+                else:
+                    embed.add_field(name="Payout", value="Nobody won this time around...", inline=False)
+                await ctx.send(content=None, embed=embed)
+                if len(losers) != 0:
+                    for loser in losers:
+                        cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {loser}')
+                        result = cursor.fetchone()
+                        val = (result[1] - arg, loser)
+                        cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
+                bets = {}
             else:
-                embed.add_field(name="Payout", value="Nobody won this time around...", inline=False)
-            await ctx.send(content=None, embed=embed)
-            if len(losers) != 0:
-                for loser in losers:
-                    cursor.execute(f'SELECT user_id, jacks FROM main WHERE user_id = {loser}')
-                    result = cursor.fetchone()
-                    val = (result[1] - arg, loser)
-                    cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
-            bets = {}
+                await ctx.send("An error occurred, either you do not have enough chips for this race or a race is already in progress.")
         else:
-            await ctx.send("There was an error")
+            await ctx.send("You must register before you can use this command")
     
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, message, bets=bets):
