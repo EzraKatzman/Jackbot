@@ -1,5 +1,7 @@
 # Jackbot
-The full discord bot casino experience, written all in python!
+The full discord bot casino experience, written all in python! Got an idea for a command? Feel free to make a pull request or get in touch with me! You can join my bot testing server [here](https://discord.gg/EFZk2TytZk) to see the bot in action! 
+
+[![Maintenance](https://img.shields.io/badge/maintained-yes-green.svg)]() [![Website shields.io](https://img.shields.io/badge/Bot%20Status-Down-red)]()
 
 ## Table of Contents
 - [Commands](#commands)
