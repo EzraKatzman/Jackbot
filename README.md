@@ -1,6 +1,5 @@
 # Jackbot
 The full discord bot casino experience, written all in python!
----
 
 ## Table of Contents
 - [Commands](#commands)
@@ -9,7 +8,7 @@ The full discord bot casino experience, written all in python!
  - [Games](#stats)
  - [Card Games](#card-games)
  - [Shop](#shop)
----
+
 ## Commands
 The following is the list of all current Jackbot commands. *This is an active thread and will change as commands are added or removed.*
 #### Income
